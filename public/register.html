@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register Customer</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="navbar"></div>
+
+    <script>
+      // Load the navbar HTML file into the #navbar div
+      fetch("navbar.html")
+        .then((response) => response.text())
+        .then((data) => {
+          document.getElementById("navbar").innerHTML = data;
+        });
+    </script>
+    <h1>Register Customer</h1>
+    <form id="registerForm">
+      <input type="text" id="name" placeholder="Full Name" />
+      <input type="email" id="email" placeholder="Email Address" />
+      <button onclick="registerCustomer(event)">Register</button>
+      <p id="registerMessage"></p>
+    </form>
+    <div id="registerMessage"></div>
+
+    <script>
+      // Register customer with validation
+      function registerCustomer(event) {
+        event.preventDefault();
+
+        const name = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const message = document.getElementById("registerMessage");
+
+        // Validate input fields
+        if (!name || !email) {
+          message.textContent = "Please fill in all fields.";
+          message.style.color = "red";
+          return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          message.textContent = "Please enter a valid email address.";
+          message.style.color = "red";
+          return;
+        }
+
+        // Make API call if valid
+        fetch("/customers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            message.textContent = "Customer registered successfully!";
+            message.style.color = "green";
+          })
+          .catch((error) => {
+            message.textContent = "Registration failed. Please try again.";
+            message.style.color = "red";
+            console.error(error);
+          });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Book Inventory</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="navbar"></div>
+
+    <script>
+      // Load the navbar HTML file into the #navbar div
+      fetch("navbar.html")
+        .then((response) => response.text())
+        .then((data) => {
+          document.getElementById("navbar").innerHTML = data;
+        });
+    </script>
+    <h1>Book Inventory</h1>
+    <div id="bookList"></div>
+
+    <h2>Add a New Book</h2>
+    <form id="addBookForm">
+      <input type="text" id="title" placeholder="Title" required />
+      <input type="text" id="author" placeholder="Author" required />
+      <input
+        type="number"
+        id="price"
+        placeholder="Price"
+        step="0.01"
+        required
+      />
+      <input type="number" id="stock" placeholder="Stock" required />
+      <button type="submit">Add Book</button>
+    </form>
+
+    <script>
+      // Fetch and display all books
+      function fetchBooks() {
+        fetch("/books")
+          .then((response) => response.json())
+          .then((data) => {
+            const bookList = document.getElementById("bookList");
+            bookList.innerHTML = ""; // Clear previous content
+
+            data.forEach((book) => {
+              const bookItem = document.createElement("div");
+              bookItem.className = "book-item";
+              bookItem.innerHTML = `
+                        <p><strong>Title:</strong> ${book.title}</p>
+                        <p><strong>Author:</strong> ${book.author}</p>
+                        <p><strong>Price:</strong> $${book.price}</p>
+                        <p><strong>Stock:</strong> ${book.stock}</p>
+                        <button onclick="deleteBook(${book.id})">Delete</button>
+                    `;
+              bookList.appendChild(bookItem);
+            });
+          })
+          .catch((error) => {
+            alert("Failed to fetch books. Please try again.");
+            console.error(error);
+          });
+      }
+
+      fetchBooks(); // Call fetchBooks on page load
+
+      function displayBooks(books) {
+        const bookList = document.getElementById("bookList");
+        bookList.innerHTML = "";
+        books.forEach((book) => {
+          const bookDiv = document.createElement("div");
+          bookDiv.innerHTML = `
+                    <p>${book.title} by ${book.author} - $${book.price} (Stock: ${book.stock})</p>
+                    <button onclick="deleteBook(${book.id})">Delete</button>
+                `;
+          bookList.appendChild(bookDiv);
+        });
+      }
+
+      document
+        .getElementById("addBookForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const title = document.getElementById("title").value;
+          const author = document.getElementById("author").value;
+          const price = parseFloat(document.getElementById("price").value);
+          const stock = parseInt(document.getElementById("stock").value);
+
+          await fetch("/books", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, author, price, stock }),
+          });
+
+          fetchBooks();
+        });
+
+      async function deleteBook(id) {
+        await fetch(`/books/${id}`, { method: "DELETE" });
+        fetchBooks();
+      }
+
+      fetchBooks();
+    </script>
+  </body>
+</html>

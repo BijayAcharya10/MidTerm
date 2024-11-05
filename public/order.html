@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Place Order</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="navbar"></div>
+
+    <script>
+      // Load the navbar HTML file into the #navbar div
+      fetch("navbar.html")
+        .then((response) => response.text())
+        .then((data) => {
+          document.getElementById("navbar").innerHTML = data;
+        });
+    </script>
+    <h1>Place an Order</h1>
+    <form id="orderForm">
+      <select id="customerSelect" required></select>
+      <select id="bookSelect" required></select>
+      <input
+        type="number"
+        id="quantity"
+        placeholder="Quantity"
+        min="1"
+        required
+      />
+      <button type="submit">Place Order</button>
+    </form>
+    <div id="orderMessage"></div>
+
+    <script>
+      async function loadCustomersAndBooks() {
+        const customerResponse = await fetch("/customers");
+        const customers = await customerResponse.json();
+
+        const customerSelect = document.getElementById("customerSelect");
+        customerSelect.innerHTML = customers
+          .map(
+            (customer) =>
+              `<option value="${customer.id}">${customer.name}</option>`
+          )
+          .join("");
+
+        const bookResponse = await fetch("/books");
+        const books = await bookResponse.json();
+
+        const bookSelect = document.getElementById("bookSelect");
+        bookSelect.innerHTML = books
+          .map((book) => `<option value="${book.id}">${book.title}</option>`)
+          .join("");
+      }
+
+      document
+        .getElementById("orderForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const customer_id = parseInt(
+            document.getElementById("customerSelect").value
+          );
+          const book_id = parseInt(document.getElementById("bookSelect").value);
+          const quantity = parseInt(document.getElementById("quantity").value);
+
+          const response = await fetch("/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ customer_id, book_id, quantity }),
+          });
+
+          const orderMessage = document.getElementById("orderMessage");
+          if (response.ok) {
+            orderMessage.innerHTML = "Order placed successfully!";
+          } else {
+            const error = await response.json();
+            orderMessage.innerHTML = `Error: ${error.message}`;
+          }
+        });
+
+      loadCustomersAndBooks();
+    </script>
+  </body>
+</html>
